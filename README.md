@@ -10,3 +10,5 @@ The endpoints will be for Users, Movies, Rentals.
 Submission: Publish the APIs with Postman and share this too, do not forget to include the link to your level one task branch.
 
 Reviews will be done on Saturdays.
+
+https://documenter.getpostman.com/view/4458311/TVsydjXb
