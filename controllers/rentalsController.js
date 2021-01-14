@@ -16,7 +16,7 @@ const RentalsController = {
     const values = [req.body.title, req.body.year, req.body.genre];
 
     try {
-      const { rows } = await db.query(createQuery, values);
+      const  rows  = await db.query(createQuery, values);
       ResponseHelper.success(res, 201, rows[0]);
     } catch (error) {
      ResponseHelper.error(res, 400, error);
@@ -31,7 +31,7 @@ const RentalsController = {
   async getAll(req, res) {
     const findAllQuery = "SELECT * FROM rentals where owner_id = $1";
     try {
-      const { rows, rowCount } = await db.query(findAllQuery, [req.user.id]);
+      const rows = await db.query(findAllQuery, [req.user.id]);
        ResponseHelper.success(res, 200, rows);
     } catch (error) {
        ResponseHelper.error(res, 500, error);    }
@@ -45,7 +45,7 @@ const RentalsController = {
   async getOne(req, res) {
     const text = "SELECT * FROM rentals WHERE id = $1 AND owner_id = $2";
     try {
-      const { rows } = await db.query(text, [req.params.id, req.user.id]);
+      const  rows  = await db.query(text, [req.params.id, req.user.id]);
       if (!rows[0]) {
         ResponseHelper.error(res, 404, { message: "movie not found" });
       }
@@ -66,7 +66,7 @@ const RentalsController = {
       SET title=$1,year=$2,genre=$3
       WHERE id=$4 AND owner_id = $5 returning *`;
     try {
-      const { rows } = await db.query(findOneQuery, [
+      const rows  = await db.query(findOneQuery, [
         req.params.id,
         req.user.id,
       ]);
@@ -95,7 +95,7 @@ const RentalsController = {
     const deleteQuery =
       "DELETE FROM rentals WHERE id=$1 AND owner_id = $2 returning *";
     try {
-      const { rows } = await db.query(deleteQuery, [
+      const rows  = await db.query(deleteQuery, [
         req.params.id,
         req.user.id,
       ]);
