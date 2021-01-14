@@ -4,7 +4,9 @@
   "description": "This is a base repository for the backend initiative project",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start:dev": "cross-env NODE_ENV=development npm run migrate && cross-env NODE_ENV=development nodemon server.js",
+    "migrate": "node db/migration.js",
+    "dev": "node db/index.js",
     "start": "nodemon server.js"
   },
   "repository": {
@@ -18,12 +20,17 @@
   },
   "homepage": "https://github.com/Rythae/Backend-Initiative-Project#readme",
   "dependencies": {
-    "bcrypt": "^5.0.0",
+    "@hapi/joi": "^15.0.3",
+    "bcryptjs": "^2.4.3",
     "body-parser": "^1.19.0",
     "cors": "^2.8.5",
+    "cross-env": "^5.1.6",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
-    "jsonwebtoken": "^8.5.1"
+    "jsonwebtoken": "^8.5.1",
+    "morgan": "^1.10.0",
+    "pg": "^8.5.1",
+    "winston": "^3.3.3"
   },
   "devDependencies": {
     "nodemon": "^2.0.6"

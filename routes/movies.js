@@ -1,19 +1,18 @@
-const express = require('express')
-const router = express.Router()
-const verifyToken = require('../middleware/verifyToken')
-const {
-  createMovieController,
-  getMoviesController,
-  getMovieByIdController,
-  updateMovieByIdController,
-  deleteMovieByIdController,
-} = require("../controllers/moviesController");
+const express = require("express");
+const router = express.Router();
+const tokenVerification = require("../middlewares/tokenVerification");
+const movieSchemaValidator = require("../middlewares/movieSchemaValidator");
+const MoviesController = require("../controllers/moviesController");
 
+router.get("/", tokenVerification, MoviesController.getAll);
+router.get("/:id", tokenVerification, MoviesController.getOne);
+router.post(
+  "/",
+  tokenVerification,
+  movieSchemaValidator,
+  MoviesController.create
+);
+router.put("/:id", tokenVerification, MoviesController.update);
+router.delete("/:id", tokenVerification, MoviesController.delete);
 
-router.get("/", verifyToken, getMoviesController);
-router.get("/:id", verifyToken, getMovieByIdController);
-router.post("/", verifyToken, createMovieController);
-router.put("/:id", verifyToken, updateMovieByIdController);
-router.delete("/:id", verifyToken, deleteMovieByIdController);
-
-module.exports = router
+module.exports = router;

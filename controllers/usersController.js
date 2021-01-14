@@ -1,44 +1,105 @@
-const users = require("../models/User");
-const util = require("../utility/util");
+const jwt = require("jsonwebtoken")
+const bcrypt = require("bcryptjs")
+const UserModel = require("../models/User")
+const hashPassword = require("../utility/hash")
+const ResponseHelper = require("../utility/ResponseHelper")
 
-const signUpController = async (req, res) => {
-  try {
-    const hashedPassword = await util.hash(req.body.password);
-    const user = {
-      id: users.length + 1,
-      name: req.body.name,
-      email: req.body.email,
-      password: hashedPassword,
-    };
-    users.push(user);
-    return util.successHandler(res, user);
-  } catch (error) {
-    return util.errorHandler(res, { message: error.message });
-  }
-};
+const User = new UserModel();
+/**
+ * @export
+ */
+class UsersController {
+  /**
+   * @param  {Object} req - the request object
+   * @param  {Object} res - the response object
+   * @return {JsonResponse} - the json response
+   */
+  static async userSignup(req, res) {
+    const { name, email, password } = req.body;
+    const userExists = await User.getByField("email", email);
 
-const loginController = async (req, res) => {
-  try {
-    const user = users.find((user) => user.email === req.body.email);
-    if (user === null) {
-      return util.errorHandler(res, { message: "User does not exist" }, 404);
+    if (userExists) {
+      ResponseHelper.error(res, 409, {
+        message: "User already exists",
+      });
+    } else {
+      const expiryTime = 60 * 60; // 1 hour
+
+      const newUser = await User.create({
+        name,
+        email,
+        password: hashPassword(password),
+      });
+  
+      const token = await jwt.sign(
+        {
+          id: newUser.id,
+          email,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: expiryTime }
+      );
+
+      delete newUser.password;
+ 
+      const newUserWithToken = Object.assign(newUser, {
+        token,
+      });
+      ResponseHelper.success(res, 201, newUserWithToken);
     }
-    if (await util.verifyPassword(req.body.password, user.password)) {
-      const accessToken = util.setToken(user);
-      const { name, email } = user;
-      return util.successHandler(res, { name, email, accessToken });
-    }
-  } catch (error) {
-    return util.errorHandler(res, { message: "User not allowed" }, 403);
   }
-};
 
-const getUsersController = (req, res) => {
-  return util.successHandler(res, users);
-};
+  /**
+   * @param  {Object} req - the request object
+   * @param  {Object} res - the response object
+   * @return {JsonResponse} - the json response
+   */
+  static async userSignin(req, res) {
+    const { email, password } = req.body;
+    const user = await User.getByField("email", email);
+    const isCorrectPassword =
+      user && (await bcrypt.compareSync(password, user.password));
+    if (!user) {
+      ResponseHelper.error(res, 404, {
+        message: "user not found",
+      });
+    } else if (!isCorrectPassword) {
+      ResponseHelper.error(res, 401, {
+        message: "Invalid username or password",
+      });
+    } else {
+      const expiryTime = 60 * 60; // 1 hour
 
-module.exports = {
-  signUpController,
-  loginController,
-  getUsersController,
-};
+      const token = jwt.sign(
+        {
+          id: user.id,
+          email: user.email,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: expiryTime }
+      );
+
+      const data = {
+        id: user.id,
+        email: user.email,
+        token,
+      };
+
+      ResponseHelper.success(res, 200, data);
+    }
+  }
+
+  static async getAll(req, res) {
+    const users = await User.getAllUsers();
+    ResponseHelper.success(res, 200, {data: users});
+  }
+}
+
+module.exports = UsersController;
+
+
+
+
+
+
+

@@ -1,4 +1,4 @@
-const bcrypt = require("bcrypt");
+const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 
@@ -15,8 +15,8 @@ util.errorHandler = (res, error, status = 500) => {
 };
 
 util.hash = async (password) => {
-  const salt = await bcrypt.genSalt();
-  return await bcrypt.hash(password, salt);
+  const salt = bcrypt.genSaltSync(10);
+  return bcrypt.hashSync(password, salt);
 };
 
 util.verifyPassword = async (password, userPassword) => {
