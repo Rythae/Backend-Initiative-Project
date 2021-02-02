@@ -10,8 +10,8 @@ const HttpException = require('../utility/HttpException')
 
  const schema = Joi.object({
    title: Joi.string().min(1).max(60).required(),
-   year:  Joi.number().min(1).max(3000).required(),
-   genre: Joi.string().min(1).max(50).required()
+   year_of_production: Joi.number().min(1).max(3000).required(),
+   genre: Joi.string().min(1).max(50).required(),
  });
 
 const movieSchemaValidator = async (req, res, next) => {

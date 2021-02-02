@@ -1,30 +1,24 @@
-const jwt = require('jsonwebtoken')
-const HttpException = require("../utility/HttpException");
-const ResponseHelper = require("../utility/ResponseHelper");
+const jwt = require("jsonwebtoken");
 const dotenv = require("dotenv");
 const Model = require("../database/models");
 const { User } = Model;
+const ResponseHelper = require("../utility/ResponseHelper");
 
 dotenv.config();
 
-/**
- * @param  {Object} req - the request object
- * @param  {Object} res - the response object
- * @param  {Function} next - switch to the next route middleware
- * @return {JsonResponse} - the json response
- */
-const tokenVerification = async(req, res, next) => {
-  const token = req.headers.authorization
-        if (!token) {
-          return ResponseHelper.error(res, 401, {
-            message: "Unauthorized",
-          });
+module.exports = {
+  async (req, res, next) {
+        if (!req.headers.authorization) {
+            return ResponseHelper.error(res, 401, {
+            message: "Unathorized",
+        });
         }
+        const token = req.headers.authorization.split(' ')[1]
        jwt.verify(
          token,
          process.env.JWT_SECRET,
            { expiresIn: "24h" }, (error, decoded) => {
-             if (error) {
+               if (error) {
                return ResponseHelper.error(res, 401, { error });  
                }
                req.decoded = decoded
@@ -39,5 +33,5 @@ const tokenVerification = async(req, res, next) => {
          }
        ); 
     }
+}
 
-module.exports = tokenVerification;

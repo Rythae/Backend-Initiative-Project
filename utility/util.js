@@ -23,8 +23,12 @@ util.verifyPassword = async (password, userPassword) => {
   return await bcrypt.compare(password, userPassword);
 };
 
-util.setToken = (user) => {
-  return jwt.sign(user, process.env.ACCESS_TOKEN_SECRET);
+util.setToken = ({ id, email }) => {
+  return jwt.sign({ userId:  id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+};
+
+util.verifyToken = (user) => {
+  return jwt.verify(user, process.env.JWT_SECRET, { expiresIn: "24h" });
 };
 
 module.exports = util;

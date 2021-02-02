@@ -1,110 +1,115 @@
 const ResponseHelper = require("../utility/ResponseHelper");
-const db = require("../db");
+const Model = require("../database/models")
+
+const { Movie } = Model
 
 const MoviesController = {
   /**
    * Create A Movie
-   * @param {object} req 
+   * @param {object} req
    * @param {object} res
-   * @returns {object} movie object 
+   * @returns {object} movie object
    */
-  async create(req, res) {
-    const createQuery = `INSERT INTO
-      movies("title", "year", "genre")
-      VALUES($1, $2, $3)
-      returning *`;
-    const values = [
-      req.body.title,
-      req.body.year,
-      req.body.genre
-    ];
-
+  async create({ body, decoded }, res, next) {
     try {
-      const  rows  = await db.query(createQuery, values);
-       ResponseHelper.success(res, 201, rows[0]);
+      const { title, year_of_production, genre } = body;
+      const { userId } = decoded;
+
+      const movie = await Movie.create({
+        title,
+        year_of_production,
+        genre,
+        userId,
+      });
+      return ResponseHelper.success(res, 201, movie);
     } catch (error) {
-       ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
   /**
    * Get All Movies
-   * @param {object} req 
-   * @param {object} res 
+   * @param {object} req
+   * @param {object} res
    * @returns {object} movies array
    */
-  async getAll(req, res) {
-    const findAllQuery = 'SELECT * FROM movies where owner_id = $1';
+  async getAll(req, res, next) {
     try {
-      const  rows  = await db.query(findAllQuery, [req.user.id]);
-       ResponseHelper.success(res, 200, rows);
+      const myMvies = await Movie.findAll();
+      return ResponseHelper.success(res, 200, myMvies);
     } catch (error) {
-      ResponseHelper.error(res, 500, error);
+      return next(new Error(error));
     }
   },
   /**
-   * Get A Reflection
-   * @param {object} req 
+   * Get A Movie
+   * @param {object} req
    * @param {object} res
-   * @returns {object} reflection object
+   * @returns {object} Movie object
    */
-  async getOne(req, res) {
-    const text = 'SELECT * FROM movies WHERE id = $1 AND owner_id = $2';
+  async getOne({ body }, res, next) {
     try {
-      const  rows  = await db.query(text, [req.params.id, req.user.id]);
-      if (!rows[0]) {
-        ResponseHelper.error(res, 404, { message: "movie not found" });
+      const { movieId } = body;
+      const myMovie = await Movie.findOne(movieId);
+      if (!myMovie) {
+        return ResponseHelper.error(res, 404, {
+          message: "Movie not found",
+        });
       }
-      ResponseHelper.success(res, 200, rows[0]);
+      return ResponseHelper.success(res, 200, myMovie);
     } catch (error) {
-      ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
   /**
    * Update A Movie
-   * @param {object} req 
-   * @param {object} res 
+   * @param {object} req
+   * @param {object} res
    * @returns {object} updated movie
    */
-  async update(req, res) {
-    const findOneQuery = 'SELECT * FROM movies WHERE id=$1 AND owner_id = $2';
-    const updateOneQuery = `UPDATE movies
-      SET title=$1,year=$2,genre=$3
-      WHERE id=$4 AND owner_id = $5 returning *`;
+  async update({ body }, res, next) {
     try {
-      const rows  = await db.query(findOneQuery, [req.params.id, req.user.id]);
-      if (!rows[0]) {
-        ResponseHelper.error(res, 404, { message: "movie not found" });
+      const { movieId } = body;
+      const myMovie = await Movie.findOne(movieId);
+      if (!myMovie) {
+        return ResponseHelper.error(res, 400, {
+          message: "Wrong movie id",
+        });
       }
-      const values = [
-        req.body.title || rows[0].title,
-        req.body.year || rows[0].year,
-        req.params.id,
-        req.user.id
-      ];
-      const response = await db.query(updateOneQuery, values);
-      ResponseHelper.success(res, 200, response.rows[0]);
+      const updatedMovie = await Movie.update(
+        {
+          title: body.title || myMovie.title,
+          year_of_production:
+            body.year_of_production || myMovie.year_of_production,
+          genre: body.genre || myMovie.genre,
+        },
+        { where: { id: myMovie.id }, returning: true, plain: true }
+      );
+      return ResponseHelper.success(res, 201, updatedMovie[1]);
     } catch (error) {
-      ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
   /**
    * Delete A Movie
-   * @param {object} req 
-   * @param {object} res 
-   * @returns {void} return statuc code 204 
+   * @param {object} req
+   * @param {object} res
+   * @returns {void} return statuc code 204
    */
-  async delete(req, res) {
-    const deleteQuery = 'DELETE FROM movies WHERE id=$1 AND owner_id = $2 returning *';
+  async delete({ body }, res, next) {
     try {
-      const rows  = await db.query(deleteQuery, [req.params.id, req.user.id]);
-      if (!rows[0]) {
-        ResponseHelper.error(res, 404, { message: "movie not found" });
+      const { movieId } = body;
+      const movie = await Movie.findOne(movieId);
+      if (!movie) {
+        return ResponseHelper.error(res, 400, {
+          message: "Wrong movie id",
+        });
       }
-      ResponseHelper.error(res, 204, { message: "deleted" });
+      await movie.destroy();
+      return ResponseHelper.success(res, 200, {});
     } catch (error) {
-      ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
-  }
-}
+  },
+};
 
 module.exports = MoviesController;

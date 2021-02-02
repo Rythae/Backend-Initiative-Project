@@ -1,5 +1,7 @@
 const Joi = require("@hapi/joi");
 const HttpException = require("../utility/HttpException");
+const Model = require("../database/models");
+const { User } = Model;
 
 /**
  * @param  {Object} req - the request object

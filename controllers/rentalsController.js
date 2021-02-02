@@ -1,5 +1,7 @@
 const ResponseHelper = require("../utility/ResponseHelper");
-const db = require("../db");
+const Model = require("../database/models");
+
+const { Rental } = Model;
 
 const RentalsController = {
   /**
@@ -8,18 +10,22 @@ const RentalsController = {
    * @param {object} res
    * @returns {object} movie object
    */
-  async create(req, res) {
-    const createQuery = `INSERT INTO
-      rentals("title", "year", "genre")
-      VALUES($1, $2, $3)
-      returning *`;
-    const values = [req.body.title, req.body.year, req.body.genre];
-
+  async create({ body, decoded }, res, next) {
     try {
-      const  rows  = await db.query(createQuery, values);
-      ResponseHelper.success(res, 201, rows[0]);
+      const { title, date_collected, date_returned, status, movieId } = body;
+
+      const { userId } = decoded;
+      const rental = await Rental.create({
+        title,
+        date_collected,
+        date_returned,
+        status,
+        userId,
+        movieId,
+      });
+      return ResponseHelper.success(res, 201, rental);
     } catch (error) {
-     ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
   /**
@@ -28,13 +34,13 @@ const RentalsController = {
    * @param {object} res
    * @returns {object} movies array
    */
-  async getAll(req, res) {
-    const findAllQuery = "SELECT * FROM rentals where owner_id = $1";
+  async getAll(req, res, next) {
     try {
-      const rows = await db.query(findAllQuery, [req.user.id]);
-       ResponseHelper.success(res, 200, rows);
+      const myRentals = await Rental.findAll();
+      return ResponseHelper.success(res, 200, myRentals);
     } catch (error) {
-       ResponseHelper.error(res, 500, error);    }
+      return next(new Error(error));
+    }
   },
   /**
    * Get A Rental
@@ -42,16 +48,18 @@ const RentalsController = {
    * @param {object} res
    * @returns {object} rental object
    */
-  async getOne(req, res) {
-    const text = "SELECT * FROM rentals WHERE id = $1 AND owner_id = $2";
+  async getOne({ body }, res, next) {
     try {
-      const  rows  = await db.query(text, [req.params.id, req.user.id]);
-      if (!rows[0]) {
-        ResponseHelper.error(res, 404, { message: "movie not found" });
+      const { movieId } = body;
+      const myRental = await Rental.findOne(movieId);
+      if (!myRental) {
+        return ResponseHelper.error(res, 404, {
+          message: "Rental not found",
+        });
       }
-      ResponseHelper.success(res, 200, rows[0]);
+      return ResponseHelper.success(res, 200, myRental);
     } catch (error) {
-      ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
   /**
@@ -60,51 +68,55 @@ const RentalsController = {
    * @param {object} res
    * @returns {object} updated rental
    */
-  async update(req, res) {
-    const findOneQuery = "SELECT * FROM rentals WHERE id=$1 AND owner_id = $2";
-    const updateOneQuery = `UPDATE rentals
-      SET title=$1,year=$2,genre=$3
-      WHERE id=$4 AND owner_id = $5 returning *`;
+  async update({ body, decoded }, res, next) {
     try {
-      const rows  = await db.query(findOneQuery, [
-        req.params.id,
-        req.user.id,
-      ]);
-      if (!rows[0]) {
-        ResponseHelper.error(res, 404, { message: "movie not found" });
+      const { movieId } = body;
+      const rental = await Rental.findByPk(movieId);
+      console.log("movieId", movieId);
+
+      if (!rental) {
+        return ResponseHelper.error(res, 400, {
+          message: "Wrong movie id",
+        });
       }
-      const values = [
-        req.body.title || rows[0].title,
-        req.body.year || rows[0].year,
-        req.params.id,
-        req.user.id,
-      ];
-      const response = await db.query(updateOneQuery, values);
-      ResponseHelper.success(res, 200, response.rows[0]);
+      const updatedRental = await Rental.update(
+        {
+          title: body.title || rental.title,
+          date_collected: body.date_collected || rental.date_collected,
+          date_returned: body.date_returned || rental.date_returned,
+          status: body.status || rental.status,
+          movieId: body.movieId || rental.movieId,
+        },
+        {
+          where: { id: movieId, userId: decoded.userId },
+          returning: true,
+          plain: true,
+        }
+      );
+      return ResponseHelper.success(res, 201, updatedRental);
     } catch (error) {
-      ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
   /**
    * Delete A Rental
    * @param {object} req
    * @param {object} res
-   * @returns {void} return statuc code 204
+   * @returns {void} return statuc code 400
    */
-  async delete(req, res) {
-    const deleteQuery =
-      "DELETE FROM rentals WHERE id=$1 AND owner_id = $2 returning *";
+  async delete({ body }, res, next) {
     try {
-      const rows  = await db.query(deleteQuery, [
-        req.params.id,
-        req.user.id,
-      ]);
-      if (!rows[0]) {
-        ResponseHelper.error(res, 404, { message: "movie not found" });
+      const { movieId } = body;
+      const rental = await Rental.findByPk(movieId);
+      if (!rental) {
+        return ResponseHelper.error(res, 400, {
+          message: "Wrong movie id",
+        });
       }
-      ResponseHelper.error(res, 204, { message: "deleted" });
+      await rental.destroy();
+      return ResponseHelper.success(res, 200, {});
     } catch (error) {
-      ResponseHelper.error(res, 400, error);
+      return next(new Error(error));
     }
   },
 };

@@ -7,7 +7,11 @@
     "start:dev": "cross-env NODE_ENV=development npm run migrate && cross-env NODE_ENV=development nodemon server.js",
     "migrate": "node db/migration.js",
     "dev": "node db/index.js",
-    "start": "nodemon server.js"
+    "start": "nodemon server.js",
+    "db:ready": "npm-run-all db:undo db:migrate db:seed",
+    "db:migrate": "sequelize db:migrate",
+    "db:undo": "sequelize db:migrate:undo:all",
+    "db:seed": "sequelize db:seed:all"
   },
   "repository": {
     "type": "git",
@@ -30,6 +34,8 @@
     "jsonwebtoken": "^8.5.1",
     "morgan": "^1.10.0",
     "pg": "^8.5.1",
+    "pg-hstore": "^2.3.3",
+    "sequelize": "^6.5.0",
     "winston": "^3.3.3"
   },
   "devDependencies": {
