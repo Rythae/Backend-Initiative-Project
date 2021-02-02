@@ -1,14 +1,9 @@
 # Backend-Initiative-Project
-This is a base repository for the backend initiative project
+This is a base repository for the backend initiative project.
 
-## Level One Task: CRUD API WITH ARRAY
-Build a CRUD(Create, Read, Update, Delete) API(Application Programming Interface) with any  backend language of your choice.
-No database involved, just a server.
-
-The endpoints will be for Users, Movies, Rentals.
-
-Submission: Publish the APIs with Postman and share this too, do not forget to include the link to your level one task branch.
-
-Reviews will be done on Saturdays.
-
-https://documenter.getpostman.com/view/4458311/TVsydjXb
+### Guidelines
+1. Fork this repository.
+2. By default you have a main branch and 12 other branch.
+3. For each level task, checkout the branch with the name of that level. The link to the branch is what you will submit.
+4. Push changes.
+5. After we assessed the task then we will do the needful and give adequate feedback.
