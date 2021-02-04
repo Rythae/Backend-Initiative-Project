@@ -6,6 +6,8 @@ var cors = require("cors");
 const moviesRouter = require("./routes/movies");
 const usersRouter = require("./routes/users");
 const rentalsRouter = require("./routes/rentals");
+const socialRouter = require("./routes/oauth");
+const setPassportMiddleware = require('./middlewares/passport/strategy')
 
 const app = express();
 app.use(express.json());
@@ -14,9 +16,13 @@ app.use(bodyParser.json());
 
 app.use(cors());
 
+
 app.use("/movies", moviesRouter);
 app.use("/users", usersRouter);
 app.use("/rentals", rentalsRouter);
+app.use("/", socialRouter);
+
+setPassportMiddleware(app);
 
 app.get("/", (req, res) => {
   return res.status(200).json({ message: "Movie APIs" });

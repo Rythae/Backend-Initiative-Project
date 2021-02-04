@@ -23,7 +23,9 @@ const MoviesController = {
       });
       return ResponseHelper.success(res, 201, movie);
     } catch (error) {
-      return next(new Error(error));
+      return ResponseHelper.error(res, 500, {
+        message: "Server error",
+      });
     }
   },
   /**
@@ -32,12 +34,16 @@ const MoviesController = {
    * @param {object} res
    * @returns {object} movies array
    */
-  async getAll(req, res, next) {
+  async getAll({ decoded }, res) {
     try {
-      const myMvies = await Movie.findAll();
+      const myMvies = await Movie.findAll({
+        where: { userId: decoded.userId },
+      });
       return ResponseHelper.success(res, 200, myMvies);
     } catch (error) {
-      return next(new Error(error));
+      return ResponseHelper.error(res, 500, {
+        message: "Server error",
+      });
     }
   },
   /**
@@ -46,19 +52,8 @@ const MoviesController = {
    * @param {object} res
    * @returns {object} Movie object
    */
-  async getOne({ body }, res, next) {
-    try {
-      const { movieId } = body;
-      const myMovie = await Movie.findOne(movieId);
-      if (!myMovie) {
-        return ResponseHelper.error(res, 404, {
-          message: "Movie not found",
-        });
-      }
-      return ResponseHelper.success(res, 200, myMovie);
-    } catch (error) {
-      return next(new Error(error));
-    }
+  async getOne({ movie }, res) {
+    return ResponseHelper.success(res, 200, movie);
   },
   /**
    * Update A Movie
@@ -66,27 +61,23 @@ const MoviesController = {
    * @param {object} res
    * @returns {object} updated movie
    */
-  async update({ body }, res, next) {
+  async update({ params: { id }, body }, res) {
     try {
-      const { movieId } = body;
-      const myMovie = await Movie.findOne(movieId);
-      if (!myMovie) {
-        return ResponseHelper.error(res, 400, {
-          message: "Wrong movie id",
-        });
-      }
+      const { title, year_of_production, genre } = body;
+
       const updatedMovie = await Movie.update(
         {
-          title: body.title || myMovie.title,
-          year_of_production:
-            body.year_of_production || myMovie.year_of_production,
-          genre: body.genre || myMovie.genre,
+          title,
+          year_of_production,
+          genre,
         },
-        { where: { id: myMovie.id }, returning: true, plain: true }
+        { where: { id }, returning: true, plain: true }
       );
-      return ResponseHelper.success(res, 201, updatedMovie[1]);
+      return ResponseHelper.success(res, 200, updatedMovie[1]);
     } catch (error) {
-      return next(new Error(error));
+      return ResponseHelper.error(res, 500, {
+        message: "Server error",
+      });
     }
   },
   /**
@@ -95,19 +86,14 @@ const MoviesController = {
    * @param {object} res
    * @returns {void} return statuc code 204
    */
-  async delete({ body }, res, next) {
+  async delete({ params: { id }, movie }, res) {
     try {
-      const { movieId } = body;
-      const movie = await Movie.findOne(movieId);
-      if (!movie) {
-        return ResponseHelper.error(res, 400, {
-          message: "Wrong movie id",
-        });
-      }
-      await movie.destroy();
-      return ResponseHelper.success(res, 200, {});
+      await Movie.destroy({ where: {id} });
+      return ResponseHelper.success(res, 200, movie);
     } catch (error) {
-      return next(new Error(error));
+      return ResponseHelper.error(res, 500, {
+        message: "Server error",
+      });
     }
   },
 };
