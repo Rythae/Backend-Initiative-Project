@@ -42,10 +42,10 @@ module.exports = (sequelize, DataTypes) => {
         allowNull: false,
         type: DataTypes.INTEGER,
       },
-      // movieId: {
-      //   allowNull: true,
-      //   type: DataTypes.INTEGER,
-      // },
+      movieId: {
+        allowNull: true,
+        type: DataTypes.INTEGER,
+      },
     },
     {
       sequelize,

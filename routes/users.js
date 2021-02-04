@@ -8,4 +8,8 @@ router.get("/", UsersController.getAll);
 router.post("/signup", userSignupValidator, UsersController.userSignup);
 router.post("/login", userSigninValidator, UsersController.userSignin);
 
+router.post("/forgot_password", UsersController.sendResetLink);
+router.post("/reset_password/:token", UsersController.resetPassword);
+
+
 module.exports = router;

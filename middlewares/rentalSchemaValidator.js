@@ -13,7 +13,7 @@ const schema = Joi.object({
   date_collected: Joi.string().min(1).max(50).required(),
   date_returned: Joi.string().min(1).max(50).required(),
   status: Joi.string().min(1).max(50).required(),
-  // movieId: Joi.number()
+  movieId: Joi.number()
 });
 
 const rentalSchemaValidator = async (req, res, next) => {
