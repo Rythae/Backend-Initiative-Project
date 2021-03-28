@@ -106,7 +106,7 @@ class UsersController {
         });
       }
       const token = util.setToken(user);
-      const link = `${req.protocol}://localhost:3000/reset_password/${token}`;
+      const link = `${req.protocol}://${process.env.APP_URL}/reset_password/${token}`;
       await sendEmail(
         email,
         "noreply@movieapi.com",

@@ -23,7 +23,7 @@ const tokenVerification = async(req, res, next) => {
        jwt.verify(
          token,
          process.env.JWT_SECRET,
-           { expiresIn: "24h" }, (error, decoded) => {
+           { expiresIn: "5mins" }, (error, decoded) => {
              if (error) {
                return ResponseHelper.error(res, 401, { error });  
                }

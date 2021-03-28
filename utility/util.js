@@ -24,11 +24,11 @@ util.verifyPassword = async (password, userPassword) => {
 };
 
 util.setToken = ({ id, email }) => {
-  return jwt.sign({ userId:  id }, process.env.JWT_SECRET, { expiresIn: '24h' });
+  return jwt.sign({ userId:  id }, process.env.JWT_SECRET, { expiresIn: '5mins' });
 };
 
 util.verifyToken = (user) => {
-  return jwt.verify(user, process.env.JWT_SECRET, { expiresIn: "24h" });
+  return jwt.verify(user, process.env.JWT_SECRET, { expiresIn: "5mins" });
 };
 
 module.exports = util;
